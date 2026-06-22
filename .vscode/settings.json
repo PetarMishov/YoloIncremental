@@ -1,0 +1,7 @@
+{
+	"luau-lsp.diagnostics.strictDatamodelTypes": true,
+	"luau-lsp.platform.type": "roblox",
+	"luau-lsp.sourcemap.enabled": true,
+	"luau-lsp.sourcemap.rojoProjectFile": "default.project.json",
+	"luau-lsp.sourcemap.sourcemapFile": "sourcemap.json"
+}
