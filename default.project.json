@@ -10,18 +10,12 @@
     },
 
     "ServerScriptService": {
-      "Server": {
-        "$className": "Folder",
         "$path": "src/server"
-      }
     },
 
     "StarterPlayer": {
       "StarterPlayerScripts": {
-        "Client": {
-          "$className": "Folder",
           "$path": "src/client"
-        }
       }
     }
   }
