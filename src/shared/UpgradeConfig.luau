@@ -74,19 +74,20 @@ local SelfUpgrades = {
 		id = "player_foundation",
 		title = "Player Foundation",
 		description = "A basic personal stat package.",
-		cost = 0,
+		cost = 5,
+		costGrowth = 1.55,
 		x = 0,
 		y = 0,
 		effects = {
 			{
 				target = "player",
 				stat = "damage",
-				amount = 5,
+				amount = 0.8,
 			},
 			{
 				target = "player",
 				stat = "hitSpeed",
-				amount = 0.1,
+				amount = 0.05,
 			},
 		},
 	},
@@ -94,7 +95,8 @@ local SelfUpgrades = {
 		id = "quick_wrists",
 		title = "Quick Wrists",
 		description = "Increase your hit speed.",
-		cost = 0,
+		cost = 12,
+		costGrowth = 1.65,
 		x = -260,
 		y = 150,
 		prerequisites = {
@@ -104,7 +106,7 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				stat = "hitSpeed",
-				amount = 0.2,
+				amount = 0.08,
 			},
 		},
 	},
@@ -112,7 +114,8 @@ local SelfUpgrades = {
 		id = "steady_form",
 		title = "Steady Form",
 		description = "Increase your success rate.",
-		cost = 0,
+		cost = 15,
+		costGrowth = 1.7,
 		x = 0,
 		y = 160,
 		prerequisites = {
@@ -122,7 +125,7 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				stat = "successRate",
-				amount = 0.08,
+				amount = 0.03,
 			},
 		},
 	},
@@ -130,7 +133,8 @@ local SelfUpgrades = {
 		id = "sharp_snap",
 		title = "Sharp Snap",
 		description = "Increase your critical chance.",
-		cost = 0,
+		cost = 18,
+		costGrowth = 1.75,
 		x = 260,
 		y = 150,
 		prerequisites = {
@@ -140,7 +144,7 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				stat = "critChance",
-				amount = 0.05,
+				amount = 0.018,
 			},
 		},
 	},
@@ -148,7 +152,8 @@ local SelfUpgrades = {
 		id = "heavy_yoyo",
 		title = "Heavy Yoyo",
 		description = "Increase your base damage.",
-		cost = 0,
+		cost = 45,
+		costGrowth = 1.85,
 		x = -180,
 		y = 320,
 		prerequisites = {
@@ -159,7 +164,7 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				stat = "damage",
-				amount = 15,
+				amount = 1.6,
 			},
 		},
 	},
@@ -167,7 +172,8 @@ local SelfUpgrades = {
 		id = "combo_focus",
 		title = "Combo Focus",
 		description = "Better speed and critical chance together.",
-		cost = 0,
+		cost = 55,
+		costGrowth = 1.9,
 		x = 120,
 		y = 330,
 		prerequisites = {
@@ -178,12 +184,12 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				stat = "hitSpeed",
-				amount = 0.15,
+				amount = 0.06,
 			},
 			{
 				target = "player",
 				stat = "critChance",
-				amount = 0.04,
+				amount = 0.015,
 			},
 		},
 	},
@@ -191,7 +197,8 @@ local SelfUpgrades = {
 		id = "crew_leadership",
 		title = "Crew Leadership",
 		description = "Unlock crew upgrade trees at level 1.",
-		cost = 150,
+		cost = 160,
+		costGrowth = 2,
 		x = -440,
 		y = 500,
 		prerequisites = {
@@ -202,7 +209,7 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				stat = "successRate",
-				amount = 0.02,
+				amount = 0.012,
 			},
 		},
 	},
@@ -210,7 +217,8 @@ local SelfUpgrades = {
 		id = "loop_trick",
 		title = "Loop Trick",
 		description = "Unlock a chance to perform Loop.",
-		cost = 0,
+		cost = 40,
+		costGrowth = 1.85,
 		x = 380,
 		y = 510,
 		prerequisites = {
@@ -220,7 +228,7 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				trick = "loop",
-				amount = 0.16,
+				amount = 0.045,
 			},
 		},
 	},
@@ -228,7 +236,8 @@ local SelfUpgrades = {
 		id = "walk_dog_trick",
 		title = "Walk the Dog",
 		description = "Unlock a chance to perform Walk the Dog.",
-		cost = 100,
+		cost = 120,
+		costGrowth = 1.95,
 		x = 590,
 		y = 680,
 		prerequisites = {
@@ -238,7 +247,7 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				trick = "walkTheDog",
-				amount = 0.12,
+				amount = 0.035,
 			},
 		},
 	},
@@ -246,7 +255,8 @@ local SelfUpgrades = {
 		id = "world_trick",
 		title = "Around the World",
 		description = "Unlock a chance to perform Around the World.",
-		cost = 100,
+		cost = 140,
+		costGrowth = 2,
 		x = 320,
 		y = 700,
 		prerequisites = {
@@ -256,7 +266,7 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				trick = "aroundTheWorld",
-				amount = 0.1,
+				amount = 0.03,
 			},
 		},
 	},
@@ -264,7 +274,8 @@ local SelfUpgrades = {
 		id = "advanced_tricks",
 		title = "Advanced Tricks",
 		description = "Unlock Rock the Baby and Boomerang chances.",
-		cost = 250,
+		cost = 360,
+		costGrowth = 2.1,
 		x = 460,
 		y = 890,
 		prerequisites = {
@@ -275,12 +286,12 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				trick = "rockTheBaby",
-				amount = 0.08,
+				amount = 0.022,
 			},
 			{
 				target = "player",
 				trick = "boomerang",
-				amount = 0.06,
+				amount = 0.014,
 			},
 		},
 	},
@@ -288,7 +299,8 @@ local SelfUpgrades = {
 		id = "mastery",
 		title = "Personal Mastery",
 		description = "A large late-tree boost for your own stats.",
-		cost = 500,
+		cost = 900,
+		costGrowth = 2.25,
 		x = 0,
 		y = 1080,
 		prerequisites = {
@@ -300,12 +312,12 @@ local SelfUpgrades = {
 			{
 				target = "player",
 				stat = "damage",
-				amount = 25,
+				amount = 3.5,
 			},
 			{
 				target = "player",
 				stat = "successRate",
-				amount = 0.1,
+				amount = 0.018,
 			},
 		},
 	},
@@ -316,7 +328,7 @@ local CrewUpgrades = {
 		id = "crew_recruit",
 		title = "Recruit",
 		description = "Add this crew member to your team.",
-		cost = 0,
+		cost = 250,
 		x = 0,
 		y = 0,
 		maxLevel = 1,
@@ -331,7 +343,8 @@ local CrewUpgrades = {
 		id = "crew_training",
 		title = "Training",
 		description = "Increase this member's damage and success rate.",
-		cost = 75,
+		cost = 180,
+		costGrowth = 1.9,
 		x = -170,
 		y = 170,
 		prerequisites = {
@@ -341,20 +354,21 @@ local CrewUpgrades = {
 			{
 				target = "crewMember",
 				stat = "damage",
-				amount = 8,
+				amount = 1.2,
 			},
 			{
 				target = "crewMember",
 				stat = "successRate",
-				amount = 0.05,
+				amount = 0.025,
 			},
 		},
 	},
 	{
 		id = "crew_speed",
-		title = "Speed Work",
-		description = "Increase this member's hit speed.",
-		cost = 75,
+		title = "Assist Work",
+		description = "Increase this member's assist damage.",
+		cost = 160,
+		costGrowth = 1.85,
 		x = 170,
 		y = 170,
 		prerequisites = {
@@ -363,8 +377,8 @@ local CrewUpgrades = {
 		effects = {
 			{
 				target = "crewMember",
-				stat = "hitSpeed",
-				amount = 0.18,
+				stat = "damage",
+				amount = 0.9,
 			},
 		},
 	},
@@ -372,7 +386,8 @@ local CrewUpgrades = {
 		id = "crew_loop",
 		title = "Loop Practice",
 		description = "Unlock this member's chance to perform Loop.",
-		cost = 100,
+		cost = 320,
+		costGrowth = 2,
 		x = 0,
 		y = 350,
 		prerequisites = {
@@ -383,7 +398,7 @@ local CrewUpgrades = {
 			{
 				target = "crewMember",
 				trick = "loop",
-				amount = 0.08,
+				amount = 0.025,
 			},
 		},
 	},
@@ -391,7 +406,8 @@ local CrewUpgrades = {
 		id = "crew_world",
 		title = "World Practice",
 		description = "Unlock this member's chance to perform Around the World.",
-		cost = 150,
+		cost = 620,
+		costGrowth = 2.1,
 		x = -150,
 		y = 530,
 		prerequisites = {
@@ -401,7 +417,7 @@ local CrewUpgrades = {
 			{
 				target = "crewMember",
 				trick = "aroundTheWorld",
-				amount = 0.05,
+				amount = 0.018,
 			},
 		},
 	},
@@ -409,7 +425,8 @@ local CrewUpgrades = {
 		id = "crew_advanced",
 		title = "Advanced Practice",
 		description = "Boost this member's advanced trick chances.",
-		cost = 250,
+		cost = 760,
+		costGrowth = 2.15,
 		x = 160,
 		y = 530,
 		prerequisites = {
@@ -419,12 +436,12 @@ local CrewUpgrades = {
 			{
 				target = "crewMember",
 				trick = "rockTheBaby",
-				amount = 0.04,
+				amount = 0.014,
 			},
 			{
 				target = "crewMember",
 				stat = "critChance",
-				amount = 0.03,
+				amount = 0.012,
 			},
 		},
 	},
@@ -569,7 +586,15 @@ function UpgradeConfig.getCost(upgrade, level)
 		return 0
 	end
 
-	return upgrade.cost or 0
+	local baseCost = upgrade.cost or 0
+	if baseCost <= 0 then
+		return 0
+	end
+
+	local growth = upgrade.costGrowth or 1.8
+	local currentLevel = math.max(level or 0, 0)
+
+	return math.floor(baseCost * (growth ^ currentLevel) + 0.5)
 end
 
 function UpgradeConfig.isTabUnlocked(data, tab)

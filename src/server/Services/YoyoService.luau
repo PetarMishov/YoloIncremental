@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(script.Parent.Yoyo.Remotes)
@@ -9,6 +10,7 @@ local YoyoService = {}
 
 local remotes
 local playerDataService
+local nextHitTimeByUserId = {}
 
 local function getTrick(trickThresholds)
 	if type(trickThresholds) ~= "table" then
@@ -46,6 +48,10 @@ function YoyoService.start(dependencies)
 
 	remotes = Remotes.create()
 
+	Players.PlayerRemoving:Connect(function(player)
+		nextHitTimeByUserId[player.UserId] = nil
+	end)
+
 	remotes.YoyoHit.OnServerInvoke = function(player)
 		local data = playerDataService.getData(player)
 
@@ -57,6 +63,20 @@ function YoyoService.start(dependencies)
 		end
 
 		local stats = data.player.stats
+		local now = os.clock()
+		local nextHitTime = nextHitTimeByUserId[player.UserId] or 0
+
+		if now < nextHitTime then
+			return {
+				success = false,
+				message = "Yoyo is cooling down.",
+				cooldown = nextHitTime - now,
+				data = data,
+			}
+		end
+
+		nextHitTimeByUserId[player.UserId] = now + YoyoMath.getHitCooldown(stats.hitSpeed)
+
 		local successful = math.random() <= YoyoMath.clampChance(stats.successRate)
 		local trick = if successful then getTrick(stats.tricks) else nil
 		local critical = successful and math.random() <= YoyoMath.clampChance(stats.critChance)

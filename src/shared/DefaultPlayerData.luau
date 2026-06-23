@@ -2,15 +2,15 @@ local DefaultPlayerData = {}
 
 local clone = require(script.Parent:WaitForChild("Utils"):WaitForChild("Clone"))
 
-DefaultPlayerData.VERSION = 3
+DefaultPlayerData.VERSION = 4
 local MAX_MONEY = 9007199254740991
 
 local BASE_COMBAT_STATS = {
 	hitSpeed = 1,
-	successRate = 0.6,
-	critChance = 0.05,
-	critMultiplier = 2,
-	damage = 10,
+	successRate = 0.7,
+	critChance = 0.03,
+	critMultiplier = 1.75,
+	damage = 1,
 }
 
 local BASE_TRICKS = {
@@ -22,11 +22,11 @@ local BASE_TRICKS = {
 }
 
 local BASE_TRICK_MULTIPLIERS = {
-	loop = 1.25,
-	walkTheDog = 1.5,
-	aroundTheWorld = 1.75,
-	rockTheBaby = 2,
-	boomerang = 2.5,
+	loop = 1.4,
+	walkTheDog = 1.7,
+	aroundTheWorld = 2.1,
+	rockTheBaby = 2.7,
+	boomerang = 3.5,
 }
 
 local function sanitizeMoney(value)

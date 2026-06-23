@@ -16,6 +16,16 @@ function YoyoMath.getMultiplier(value)
 	return math.max(value, 0)
 end
 
+function YoyoMath.getHitCooldown(hitSpeed)
+	local speed = YoyoMath.getMultiplier(hitSpeed)
+
+	if speed <= 0 then
+		return 1
+	end
+
+	return 1 / speed
+end
+
 function YoyoMath.getTrickMultiplier(stats, trick)
 	if type(stats) ~= "table" or type(stats.trickMultipliers) ~= "table" then
 		return 1

@@ -176,13 +176,13 @@ local function SkillNode(props)
 			Size = UDim2.new(1, 0, 0, props.effectsHeight),
 			ZIndex = 35,
 		}, effectChildren),
-		Cost = if (upgrade.cost or 0) > 0
+		Cost = if (props.cost or 0) > 0 and not isMaxed
 			then e("TextLabel", {
 				BackgroundTransparency = 1,
 				Font = Enum.Font.GothamBold,
 				Position = UDim2.fromOffset(0, 32 + props.descriptionHeight + props.effectsHeight),
 				Size = UDim2.new(1, -78, 0, props.costHeight),
-				Text = "Cost: " .. Format.money(upgrade.cost),
+				Text = "Cost: " .. Format.money(props.cost),
 				TextColor3 = if isUnaffordable then Color3.fromRGB(255, 175, 105) else Color3.fromRGB(255, 220, 143),
 				TextSize = 11,
 				TextXAlignment = Enum.TextXAlignment.Left,

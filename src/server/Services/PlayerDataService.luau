@@ -31,6 +31,65 @@ local function fireDataUpdated(player)
 	remotes.dataUpdated:FireClient(player, clone(playerDataByUserId[player.UserId]))
 end
 
+local function parseUpgradeKey(upgradeKey)
+	if type(upgradeKey) ~= "string" then
+		return nil, nil
+	end
+
+	local memberId, upgradeId = string.match(upgradeKey, "^crew:([^:]+):(.+)$")
+	if memberId and upgradeId then
+		return upgradeId, {
+			scope = "crew",
+			memberId = memberId,
+		}
+	end
+
+	return upgradeKey, nil
+end
+
+local function rebuildStatsFromUpgrades(data)
+	local existingMembers = {}
+
+	if type(data.crew) ~= "table" then
+		return
+	end
+
+	data.player.stats = DefaultPlayerData.createCombatStats()
+	data.crew.members = {
+		DefaultPlayerData.createCrewMember("rookie", "Rookie Spinner"),
+	}
+
+	if type(data.upgradeLevels) ~= "table" then
+		return
+	end
+
+	for upgradeKey, level in pairs(data.upgradeLevels) do
+		local upgradeId, context = parseUpgradeKey(upgradeKey)
+		local upgrade = UpgradeConfig.getUpgrade(upgradeId)
+
+		if upgrade and upgradeId == "crew_recruit" and type(level) == "number" and level > 0 then
+			UpgradeEffects.apply(data, upgrade, context)
+		end
+	end
+
+	for _, member in ipairs(data.crew.members) do
+		existingMembers[member.id] = true
+	end
+
+	for upgradeKey, level in pairs(data.upgradeLevels) do
+		local upgradeId, context = parseUpgradeKey(upgradeKey)
+		local upgrade = UpgradeConfig.getUpgrade(upgradeId)
+
+		if upgrade and upgradeId ~= "crew_recruit" and type(level) == "number" and level > 0 then
+			for _ = 1, math.min(level, UpgradeConfig.getMaxLevel(upgrade)) do
+				if not context or existingMembers[context.memberId] then
+					UpgradeEffects.apply(data, upgrade, context)
+				end
+			end
+		end
+	end
+end
+
 local function getPlayerName(userId)
 	local player = Players:GetPlayerByUserId(userId)
 	if player then
@@ -154,6 +213,7 @@ local function loadPlayer(player)
 	end
 
 	playerDataByUserId[player.UserId] = DefaultPlayerData.merge(savedData)
+	rebuildStatsFromUpgrades(playerDataByUserId[player.UserId])
 	Money.sync(player, playerDataByUserId[player.UserId])
 	dirtyByUserId[player.UserId] = nil
 	fireDataUpdated(player)

@@ -22,10 +22,10 @@ local function getDescriptionHeight(description)
 	return 28
 end
 
-local function getNodeMetrics(upgrade)
+local function getNodeMetrics(upgrade, currentCost)
 	local descriptionHeight = getDescriptionHeight(upgrade.description)
 	local effectsHeight = math.max(16, #(upgrade.effects or {}) * 16)
-	local costHeight = if (upgrade.cost or 0) > 0 then 18 else 0
+	local costHeight = if currentCost > 0 then 18 else 0
 	local height = math.max(128, 82 + descriptionHeight + effectsHeight + costHeight)
 
 	return {
@@ -148,7 +148,8 @@ local function SkillTreeWindow(props)
 
 		for _, upgrade in ipairs(tree.upgrades or {}) do
 			byId[upgrade.id] = upgrade
-			nodeMetrics[upgrade.id] = getNodeMetrics(upgrade)
+			local level = if data then UpgradeConfig.getLevel(data, upgrade.id, treeContext) else 0
+			nodeMetrics[upgrade.id] = getNodeMetrics(upgrade, UpgradeConfig.getCost(upgrade, level))
 		end
 
 		for _, upgrade in ipairs(tree.upgrades or {}) do
@@ -193,13 +194,15 @@ local function SkillTreeWindow(props)
 
 		for _, upgrade in ipairs(tree.upgrades or {}) do
 			local metrics = nodeMetrics[upgrade.id]
+			local level = if data then UpgradeConfig.getLevel(data, upgrade.id, treeContext) else 0
 
 			nodeChildren["Node_" .. tree.id .. "_" .. UpgradeConfig.getUpgradeKey(upgrade.id, treeContext)] =
 				e(SkillNode, {
 					upgrade = upgrade,
 					state = getNodeState(data, upgrade, treeContext),
-					level = if data then UpgradeConfig.getLevel(data, upgrade.id, treeContext) else 0,
+					level = level,
 					maxLevel = UpgradeConfig.getMaxLevel(upgrade),
+					cost = UpgradeConfig.getCost(upgrade, level),
 					height = metrics.height,
 					descriptionHeight = metrics.descriptionHeight,
 					effectsHeight = metrics.effectsHeight,
