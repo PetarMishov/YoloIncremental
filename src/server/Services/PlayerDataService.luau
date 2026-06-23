@@ -6,6 +6,7 @@ local RunService = game:GetService("RunService")
 local DefaultPlayerData = require(ReplicatedStorage.Shared:WaitForChild("DefaultPlayerData"))
 local clone = require(ReplicatedStorage.Shared:WaitForChild("Utils"):WaitForChild("Clone"))
 local UpgradeConfig = require(ReplicatedStorage.Shared:WaitForChild("UpgradeConfig"))
+local YoyoConfig = require(ReplicatedStorage.Shared:WaitForChild("YoyoConfig"))
 local Money = require(script.Parent.PlayerData.Money)
 local Remotes = require(script.Parent.PlayerData.Remotes)
 local UpgradeEffects = require(script.Parent.PlayerData.UpgradeEffects)
@@ -49,15 +50,26 @@ end
 
 local function rebuildStatsFromUpgrades(data)
 	local existingMembers = {}
+	local crewYoyos = {}
 
 	if type(data.crew) ~= "table" then
 		return
 	end
 
+	if type(data.crew.members) == "table" then
+		for _, member in ipairs(data.crew.members) do
+			if type(member) == "table" and type(member.id) == "string" and type(member.yoyo) == "table" then
+				crewYoyos[member.id] = member.yoyo
+			end
+		end
+	end
+
 	data.player.stats = DefaultPlayerData.createCombatStats()
-	data.crew.members = {
-		DefaultPlayerData.createCrewMember("rookie", "Rookie Spinner"),
-	}
+	if type(data.player.yoyo) ~= "table" then
+		data.player.yoyo = YoyoConfig.createDefault()
+	end
+
+	data.crew.members = {}
 
 	if type(data.upgradeLevels) ~= "table" then
 		return
@@ -73,6 +85,10 @@ local function rebuildStatsFromUpgrades(data)
 	end
 
 	for _, member in ipairs(data.crew.members) do
+		if type(crewYoyos[member.id]) == "table" then
+			member.yoyo = crewYoyos[member.id]
+		end
+
 		existingMembers[member.id] = true
 	end
 
@@ -88,6 +104,28 @@ local function rebuildStatsFromUpgrades(data)
 			end
 		end
 	end
+end
+
+local function getYoyoOwner(data, context)
+	if type(context) ~= "table" or context.scope == "self" then
+		return data.player
+	end
+
+	if context.scope ~= "crew" or type(context.memberId) ~= "string" then
+		return nil
+	end
+
+	if type(data.crew) ~= "table" or type(data.crew.members) ~= "table" then
+		return nil
+	end
+
+	for _, member in ipairs(data.crew.members) do
+		if member.id == context.memberId then
+			return member
+		end
+	end
+
+	return nil
 end
 
 local function getPlayerName(userId)
@@ -264,6 +302,51 @@ local function buyUpgrade(player, upgradeId, context)
 	return true, clone(data)
 end
 
+local function buyYoyoPart(player, part, context)
+	local data = playerDataByUserId[player.UserId]
+
+	if not data then
+		return false, "Data is still loading."
+	end
+
+	if part ~= YoyoConfig.Part.Body and part ~= YoyoConfig.Part.String then
+		return false, "Invalid yoyo part."
+	end
+
+	local owner = getYoyoOwner(data, context)
+	if not owner then
+		return false, "Character is not available."
+	end
+
+	if type(owner.yoyo) ~= "table" then
+		owner.yoyo = YoyoConfig.createDefault()
+	end
+
+	local nextTier = YoyoConfig.getNextTier(part, owner.yoyo[part])
+	if not nextTier then
+		return false, "Yoyo " .. part .. " is already maxed."
+	end
+
+	local cost = nextTier.cost or 0
+	if not Money.isValid(cost) then
+		return false, "Invalid yoyo cost."
+	end
+
+	local currentMoney = Money.sanitize(data.money)
+	Money.set(player, data, currentMoney)
+
+	if currentMoney < cost then
+		return false, "Not enough money."
+	end
+
+	Money.set(player, data, currentMoney - cost)
+	owner.yoyo[part] = nextTier.id
+	dirtyByUserId[player.UserId] = true
+	fireDataUpdated(player)
+
+	return true, clone(data)
+end
+
 function PlayerDataService.addMoney(player, amount)
 	local data = playerDataByUserId[player.UserId]
 
@@ -306,6 +389,7 @@ function PlayerDataService.start()
 	end
 
 	remotes.buyUpgrade.OnServerInvoke = buyUpgrade
+	remotes.buyYoyoPart.OnServerInvoke = buyYoyoPart
 	remotes.getLeaderboard.OnServerInvoke = function()
 		return getLifetimeLeaderboard()
 	end

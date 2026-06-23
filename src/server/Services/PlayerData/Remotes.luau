@@ -11,6 +11,7 @@ function Remotes.create()
 	return {
 		dataUpdated = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteEvent", "DataUpdated"),
 		buyUpgrade = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteFunction", "BuyUpgrade"),
+		buyYoyoPart = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteFunction", "BuyYoyoPart"),
 		getData = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteFunction", "GetData"),
 		getLeaderboard = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteFunction", "GetLeaderboard"),
 	}

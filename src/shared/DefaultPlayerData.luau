@@ -1,8 +1,9 @@
 local DefaultPlayerData = {}
 
 local clone = require(script.Parent:WaitForChild("Utils"):WaitForChild("Clone"))
+local YoyoConfig = require(script.Parent:WaitForChild("YoyoConfig"))
 
-DefaultPlayerData.VERSION = 4
+DefaultPlayerData.VERSION = 6
 local MAX_MONEY = 9007199254740991
 
 local BASE_COMBAT_STATS = {
@@ -10,7 +11,7 @@ local BASE_COMBAT_STATS = {
 	successRate = 0.7,
 	critChance = 0.03,
 	critMultiplier = 1.75,
-	damage = 1,
+	damage = 0,
 }
 
 local BASE_TRICKS = {
@@ -49,6 +50,7 @@ function DefaultPlayerData.createCrewMember(id, name)
 	return {
 		id = id,
 		name = name,
+		yoyo = YoyoConfig.createDefault(),
 		stats = DefaultPlayerData.createCombatStats(),
 	}
 end
@@ -59,13 +61,12 @@ function DefaultPlayerData.create()
 		money = 0,
 		totalMoneyEarned = 0,
 		player = {
+			yoyo = YoyoConfig.createDefault(),
 			stats = DefaultPlayerData.createCombatStats(),
 		},
 		crew = {
 			maxSize = 4,
-			members = {
-				DefaultPlayerData.createCrewMember("rookie", "Rookie Spinner"),
-			},
+			members = {},
 		},
 		upgradeLevels = {},
 		unlockedUpgrades = {},
@@ -98,6 +99,23 @@ function DefaultPlayerData.merge(savedData)
 
 	if type(data.upgradeLevels) ~= "table" then
 		data.upgradeLevels = {}
+	end
+
+	if type(data.player) ~= "table" then
+		data.player = {
+			yoyo = YoyoConfig.createDefault(),
+			stats = DefaultPlayerData.createCombatStats(),
+		}
+	elseif type(data.player.yoyo) ~= "table" then
+		data.player.yoyo = YoyoConfig.createDefault()
+	end
+
+	if type(data.crew) == "table" and type(data.crew.members) == "table" then
+		for _, member in ipairs(data.crew.members) do
+			if type(member) == "table" and type(member.yoyo) ~= "table" then
+				member.yoyo = YoyoConfig.createDefault()
+			end
+		end
 	end
 
 	data.money = sanitizeMoney(data.money)

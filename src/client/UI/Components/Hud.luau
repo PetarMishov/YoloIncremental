@@ -20,7 +20,7 @@ local function Hud(props)
 		BackgroundColor3 = Color3.fromRGB(16, 20, 33),
 		BorderSizePixel = 0,
 		Position = UDim2.new(0, 24, 1, -24),
-		Size = UDim2.fromOffset(280, 92),
+		Size = UDim2.fromOffset(280, 130),
 	}, {
 		Corner = e("UICorner", {
 			CornerRadius = UDim.new(0, 14),
@@ -49,6 +49,21 @@ local function Hud(props)
 			TextColor3 = Color3.fromRGB(255, 255, 255),
 			TextSize = 14,
 			[ReactRoblox.Event.Activated] = props.onOpenUpgrades,
+		}, {
+			Corner = e("UICorner", {
+				CornerRadius = UDim.new(0, 8),
+			}),
+		}),
+		YoyoButton = e("TextButton", {
+			BackgroundColor3 = Color3.fromRGB(55, 68, 104),
+			BorderSizePixel = 0,
+			Font = Enum.Font.GothamBold,
+			Position = UDim2.fromOffset(18, 88),
+			Size = UDim2.new(1, -36, 0, 30),
+			Text = "Yoyo",
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			TextSize = 14,
+			[ReactRoblox.Event.Activated] = props.onOpenYoyo,
 		}, {
 			Corner = e("UICorner", {
 				CornerRadius = UDim.new(0, 8),
