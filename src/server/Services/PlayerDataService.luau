@@ -13,9 +13,11 @@ local UpgradeEffects = require(script.Parent.PlayerData.UpgradeEffects)
 local PlayerDataService = {}
 
 local DATASTORE_NAME = "YoyoIncrementalPlayerData_v1"
+local LIFETIME_LEADERBOARD_NAME = "YoyoIncrementalLifetimeMoney_v1"
 local AUTOSAVE_INTERVAL = 60
 
 local dataStore = DataStoreService:GetDataStore(DATASTORE_NAME)
+local lifetimeLeaderboard = DataStoreService:GetOrderedDataStore(LIFETIME_LEADERBOARD_NAME)
 local playerDataByUserId = {}
 local dirtyByUserId = {}
 
@@ -27,6 +29,85 @@ end
 
 local function fireDataUpdated(player)
 	remotes.dataUpdated:FireClient(player, clone(playerDataByUserId[player.UserId]))
+end
+
+local function getPlayerName(userId)
+	local player = Players:GetPlayerByUserId(userId)
+	if player then
+		return player.Name
+	end
+
+	local success, name = pcall(function()
+		return Players:GetNameFromUserIdAsync(userId)
+	end)
+
+	if success then
+		return name
+	end
+
+	return "Player " .. tostring(userId)
+end
+
+local function getLifetimeLeaderboard()
+	local byUserId = {}
+
+	local success, pages = pcall(function()
+		return lifetimeLeaderboard:GetSortedAsync(false, 10)
+	end)
+
+	if success then
+		for _, entry in ipairs(pages:GetCurrentPage()) do
+			local userId = tonumber(entry.key)
+
+			if userId then
+				byUserId[userId] = {
+					userId = userId,
+					name = getPlayerName(userId),
+					totalMoneyEarned = Money.sanitize(entry.value),
+				}
+			end
+		end
+	else
+		warn("[PlayerDataService] Failed to load lifetime money leaderboard: " .. tostring(pages))
+	end
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		local data = playerDataByUserId[player.UserId]
+
+		if data then
+			local totalMoneyEarned = Money.sanitize(data.totalMoneyEarned)
+			local existing = byUserId[player.UserId]
+
+			if not existing or totalMoneyEarned > existing.totalMoneyEarned then
+				byUserId[player.UserId] = {
+					userId = player.UserId,
+					name = player.Name,
+					totalMoneyEarned = totalMoneyEarned,
+				}
+			end
+		end
+	end
+
+	local entries = {}
+	for _, entry in pairs(byUserId) do
+		table.insert(entries, entry)
+	end
+
+	table.sort(entries, function(left, right)
+		return left.totalMoneyEarned > right.totalMoneyEarned
+	end)
+
+	local leaderboard = {}
+	for rank, entry in ipairs(entries) do
+		if rank > 10 then
+			break
+		end
+
+		entry.rank = rank
+		table.insert(leaderboard, entry)
+	end
+
+	return leaderboard
 end
 
 local function savePlayer(player)
@@ -45,6 +126,19 @@ local function savePlayer(player)
 		dirtyByUserId[userId] = nil
 	else
 		warn("[PlayerDataService] Failed to save data for " .. player.Name .. ": " .. tostring(err))
+	end
+
+	local leaderboardSuccess, leaderboardErr = pcall(function()
+		lifetimeLeaderboard:SetAsync(tostring(userId), math.floor(Money.sanitize(data.totalMoneyEarned)))
+	end)
+
+	if not leaderboardSuccess then
+		warn(
+			"[PlayerDataService] Failed to update lifetime money leaderboard for "
+				.. player.Name
+				.. ": "
+				.. tostring(leaderboardErr)
+		)
 	end
 end
 
@@ -92,7 +186,7 @@ local function buyUpgrade(player, upgradeId, context)
 	end
 
 	local currentMoney = Money.sanitize(data.money)
-	data.money = currentMoney
+	Money.set(player, data, currentMoney)
 
 	if currentMoney < cost then
 		return false, "Not enough money."
@@ -121,7 +215,7 @@ function PlayerDataService.addMoney(player, amount)
 		return false, "Invalid money amount."
 	end
 
-	Money.set(player, data, Money.sanitize((data.money or 0) + amount))
+	Money.add(player, data, amount)
 	dirtyByUserId[player.UserId] = true
 	fireDataUpdated(player)
 
@@ -142,6 +236,9 @@ function PlayerDataService.start()
 	end
 
 	remotes.buyUpgrade.OnServerInvoke = buyUpgrade
+	remotes.getLeaderboard.OnServerInvoke = function()
+		return getLifetimeLeaderboard()
+	end
 
 	Players.PlayerAdded:Connect(loadPlayer)
 	Players.PlayerRemoving:Connect(function(player)

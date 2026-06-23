@@ -3,6 +3,7 @@ local DefaultPlayerData = {}
 local clone = require(script.Parent:WaitForChild("Utils"):WaitForChild("Clone"))
 
 DefaultPlayerData.VERSION = 2
+local MAX_MONEY = 9007199254740991
 
 local BASE_COMBAT_STATS = {
 	hitSpeed = 1,
@@ -24,7 +25,7 @@ local function sanitizeMoney(value)
 		return 0
 	end
 
-	return value
+	return math.min(value, MAX_MONEY)
 end
 
 function DefaultPlayerData.createCombatStats()
@@ -46,6 +47,7 @@ function DefaultPlayerData.create()
 	return {
 		version = DefaultPlayerData.VERSION,
 		money = 0,
+		totalMoneyEarned = 0,
 		player = {
 			stats = DefaultPlayerData.createCombatStats(),
 		},
@@ -89,6 +91,11 @@ function DefaultPlayerData.merge(savedData)
 	end
 
 	data.money = sanitizeMoney(data.money)
+	data.totalMoneyEarned = sanitizeMoney(data.totalMoneyEarned)
+
+	if data.totalMoneyEarned < data.money then
+		data.totalMoneyEarned = data.money
+	end
 
 	for upgradeId, isUnlocked in pairs(data.unlockedUpgrades) do
 		if isUnlocked == true and type(data.upgradeLevels[upgradeId]) ~= "number" then

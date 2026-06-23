@@ -22,6 +22,7 @@ function Remotes.create()
 		dataUpdated = getOrCreate(skillTreeFolder, "RemoteEvent", "DataUpdated"),
 		buyUpgrade = getOrCreate(skillTreeFolder, "RemoteFunction", "BuyUpgrade"),
 		getData = getOrCreate(skillTreeFolder, "RemoteFunction", "GetData"),
+		getLeaderboard = getOrCreate(skillTreeFolder, "RemoteFunction", "GetLeaderboard"),
 	}
 end
 

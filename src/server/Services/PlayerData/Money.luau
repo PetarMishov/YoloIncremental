@@ -1,6 +1,6 @@
 local Money = {}
 
-local MAX_MONEY = 1e15
+local MAX_MONEY = 9007199254740991
 
 local function isFiniteNonNegative(value)
 	return type(value) == "number" and value == value and value ~= math.huge and value ~= -math.huge and value >= 0
@@ -18,7 +18,7 @@ function Money.sanitize(value)
 	return math.min(value, MAX_MONEY)
 end
 
-local function getMoneyValue(player)
+local function getLeaderstats(player)
 	local leaderstats = player:FindFirstChild("leaderstats")
 
 	if not leaderstats then
@@ -27,23 +27,37 @@ local function getMoneyValue(player)
 		leaderstats.Parent = player
 	end
 
-	local moneyValue = leaderstats:FindFirstChild("Money")
+	return leaderstats
+end
 
-	if not moneyValue then
-		moneyValue = Instance.new("NumberValue")
-		moneyValue.Name = "Money"
-		moneyValue.Parent = leaderstats
+local function getNumberValue(player, name)
+	local leaderstats = getLeaderstats(player)
+	local value = leaderstats:FindFirstChild(name)
+
+	if not value then
+		value = Instance.new("NumberValue")
+		value.Name = name
+		value.Parent = leaderstats
 	end
 
-	return moneyValue
+	return value
 end
 
 function Money.sync(player, data)
-	getMoneyValue(player).Value = Money.sanitize(data.money)
+	getNumberValue(player, "Total Earned").Value = Money.sanitize(data.totalMoneyEarned)
+	getNumberValue(player, "Money").Value = Money.sanitize(data.money)
 end
 
 function Money.set(player, data, amount)
 	data.money = Money.sanitize(amount)
+	Money.sync(player, data)
+end
+
+function Money.add(player, data, amount)
+	local sanitizedAmount = Money.sanitize(amount)
+
+	data.money = Money.sanitize((data.money or 0) + sanitizedAmount)
+	data.totalMoneyEarned = Money.sanitize((data.totalMoneyEarned or 0) + sanitizedAmount)
 	Money.sync(player, data)
 end
 
