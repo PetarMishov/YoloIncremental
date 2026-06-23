@@ -6,6 +6,9 @@ local RunService = game:GetService("RunService")
 local DefaultPlayerData = require(ReplicatedStorage.Shared:WaitForChild("DefaultPlayerData"))
 local clone = require(ReplicatedStorage.Shared:WaitForChild("Utils"):WaitForChild("Clone"))
 local UpgradeConfig = require(ReplicatedStorage.Shared:WaitForChild("UpgradeConfig"))
+local Money = require(script.Parent.PlayerData.Money)
+local Remotes = require(script.Parent.PlayerData.Remotes)
+local UpgradeEffects = require(script.Parent.PlayerData.UpgradeEffects)
 
 local PlayerDataService = {}
 
@@ -16,90 +19,14 @@ local dataStore = DataStoreService:GetDataStore(DATASTORE_NAME)
 local playerDataByUserId = {}
 local dirtyByUserId = {}
 
-local remotesFolder
-local dataUpdatedEvent
-local buyUpgradeFunction
-local getDataFunction
+local remotes
 
 local function getDataKey(player)
 	return "Player_" .. tostring(player.UserId)
 end
 
-local function getCrewMember(data, memberId)
-	for _, member in ipairs(data.crew.members) do
-		if member.id == memberId then
-			return member
-		end
-	end
-
-	return nil
-end
-
-local function getCrewSlot(memberId)
-	for _, slot in ipairs(UpgradeConfig.CrewSlots) do
-		if slot.memberId == memberId then
-			return slot
-		end
-	end
-
-	return nil
-end
-
-local function addStat(stats, stat, amount)
-	stats[stat] = (stats[stat] or 0) + amount
-end
-
-local function addTrick(stats, trick, amount)
-	stats.tricks[trick] = math.clamp((stats.tricks[trick] or 0) + amount, 0, 1)
-end
-
-local function applyToCrewMember(data, effect, context)
-	if type(context) ~= "table" or context.scope ~= "crew" then
-		return
-	end
-
-	local slot = getCrewSlot(context.memberId)
-	if not slot then
-		return
-	end
-
-	if effect.action == "addMember" then
-		if #data.crew.members >= data.crew.maxSize or getCrewMember(data, slot.memberId) then
-			return
-		end
-
-		table.insert(data.crew.members, DefaultPlayerData.createCrewMember(slot.memberId, slot.memberName))
-		return
-	end
-
-	local member = getCrewMember(data, slot.memberId)
-	if not member then
-		return
-	end
-
-	if effect.trick then
-		addTrick(member.stats, effect.trick, effect.amount)
-	else
-		addStat(member.stats, effect.stat, effect.amount)
-	end
-end
-
-local function applyUpgrade(data, upgrade, context)
-	for _, effect in ipairs(upgrade.effects or {}) do
-		if effect.target == "player" then
-			if effect.trick then
-				addTrick(data.player.stats, effect.trick, effect.amount)
-			else
-				addStat(data.player.stats, effect.stat, effect.amount)
-			end
-		elseif effect.target == "crewMember" then
-			applyToCrewMember(data, effect, context)
-		end
-	end
-end
-
 local function fireDataUpdated(player)
-	dataUpdatedEvent:FireClient(player, clone(playerDataByUserId[player.UserId]))
+	remotes.dataUpdated:FireClient(player, clone(playerDataByUserId[player.UserId]))
 end
 
 local function savePlayer(player)
@@ -133,6 +60,7 @@ local function loadPlayer(player)
 	end
 
 	playerDataByUserId[player.UserId] = DefaultPlayerData.merge(savedData)
+	Money.sync(player, playerDataByUserId[player.UserId])
 	dirtyByUserId[player.UserId] = nil
 	fireDataUpdated(player)
 end
@@ -159,65 +87,51 @@ local function buyUpgrade(player, upgradeId, context)
 	local upgrade = UpgradeConfig.getUpgrade(upgradeId)
 	local cost = UpgradeConfig.getCost(upgrade, UpgradeConfig.getLevel(data, upgradeId, context))
 
-	if (data.money or 0) < cost then
+	if not Money.isValid(cost) then
+		return false, "Invalid upgrade cost."
+	end
+
+	local currentMoney = Money.sanitize(data.money)
+	data.money = currentMoney
+
+	if currentMoney < cost then
 		return false, "Not enough money."
 	end
 
 	local upgradeKey = UpgradeConfig.getUpgradeKey(upgradeId, context)
 
-	data.money = (data.money or 0) - cost
+	Money.set(player, data, currentMoney - cost)
 	data.upgradeLevels[upgradeKey] = UpgradeConfig.getLevel(data, upgradeId, context) + 1
 	data.unlockedUpgrades[upgradeKey] = true
-	applyUpgrade(data, upgrade, context)
+	UpgradeEffects.apply(data, upgrade, context)
 	dirtyByUserId[player.UserId] = true
 	fireDataUpdated(player)
 
 	return true, clone(data)
 end
 
-local function createRemotes()
-	remotesFolder = ReplicatedStorage:FindFirstChild("Remotes")
+function PlayerDataService.addMoney(player, amount)
+	local data = playerDataByUserId[player.UserId]
 
-	if not remotesFolder then
-		remotesFolder = Instance.new("Folder")
-		remotesFolder.Name = "Remotes"
-		remotesFolder.Parent = ReplicatedStorage
+	if not data then
+		return false, "Data is still loading."
 	end
 
-	local skillTreeFolder = remotesFolder:FindFirstChild("SkillTree")
-
-	if not skillTreeFolder then
-		skillTreeFolder = Instance.new("Folder")
-		skillTreeFolder.Name = "SkillTree"
-		skillTreeFolder.Parent = remotesFolder
+	if not Money.isValid(amount) then
+		return false, "Invalid money amount."
 	end
 
-	dataUpdatedEvent = skillTreeFolder:FindFirstChild("DataUpdated")
-	if not dataUpdatedEvent then
-		dataUpdatedEvent = Instance.new("RemoteEvent")
-		dataUpdatedEvent.Name = "DataUpdated"
-		dataUpdatedEvent.Parent = skillTreeFolder
-	end
+	Money.set(player, data, Money.sanitize((data.money or 0) + amount))
+	dirtyByUserId[player.UserId] = true
+	fireDataUpdated(player)
 
-	buyUpgradeFunction = skillTreeFolder:FindFirstChild("BuyUpgrade")
-	if not buyUpgradeFunction then
-		buyUpgradeFunction = Instance.new("RemoteFunction")
-		buyUpgradeFunction.Name = "BuyUpgrade"
-		buyUpgradeFunction.Parent = skillTreeFolder
-	end
-
-	getDataFunction = skillTreeFolder:FindFirstChild("GetData")
-	if not getDataFunction then
-		getDataFunction = Instance.new("RemoteFunction")
-		getDataFunction.Name = "GetData"
-		getDataFunction.Parent = skillTreeFolder
-	end
+	return true, clone(data)
 end
 
 function PlayerDataService.start()
-	createRemotes()
+	remotes = Remotes.create()
 
-	getDataFunction.OnServerInvoke = function(player)
+	remotes.getData.OnServerInvoke = function(player)
 		local data = playerDataByUserId[player.UserId]
 
 		if not data then
@@ -227,7 +141,7 @@ function PlayerDataService.start()
 		return clone(data)
 	end
 
-	buyUpgradeFunction.OnServerInvoke = buyUpgrade
+	remotes.buyUpgrade.OnServerInvoke = buyUpgrade
 
 	Players.PlayerAdded:Connect(loadPlayer)
 	Players.PlayerRemoving:Connect(function(player)

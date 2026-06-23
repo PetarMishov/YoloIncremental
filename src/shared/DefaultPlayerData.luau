@@ -19,6 +19,14 @@ local BASE_TRICKS = {
 	boomerang = 0,
 }
 
+local function sanitizeMoney(value)
+	if type(value) ~= "number" or value ~= value or value == math.huge or value == -math.huge or value < 0 then
+		return 0
+	end
+
+	return value
+end
+
 function DefaultPlayerData.createCombatStats()
 	local stats = clone(BASE_COMBAT_STATS)
 	stats.tricks = clone(BASE_TRICKS)
@@ -37,7 +45,7 @@ end
 function DefaultPlayerData.create()
 	return {
 		version = DefaultPlayerData.VERSION,
-		money = 1000,
+		money = 0,
 		player = {
 			stats = DefaultPlayerData.createCombatStats(),
 		},
@@ -80,9 +88,7 @@ function DefaultPlayerData.merge(savedData)
 		data.upgradeLevels = {}
 	end
 
-	if type(data.money) ~= "number" then
-		data.money = 0
-	end
+	data.money = sanitizeMoney(data.money)
 
 	for upgradeId, isUnlocked in pairs(data.unlockedUpgrades) do
 		if isUnlocked == true and type(data.upgradeLevels[upgradeId]) ~= "number" then
