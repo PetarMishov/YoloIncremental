@@ -14,6 +14,10 @@ UpgradeConfig.Stats = {
 		label = "Crit Chance",
 	},
 	{
+		id = "critMultiplier",
+		label = "Crit Multiplier",
+	},
+	{
 		id = "damage",
 		label = "Damage",
 	},

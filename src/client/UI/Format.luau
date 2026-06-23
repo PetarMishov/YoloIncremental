@@ -58,7 +58,11 @@ function Format.leveledEffect(effect, currentLevel, maxLevel)
 	local currentText
 	local nextText
 
-	if effect.trick then
+	if effect.trickMultiplier then
+		label = Format.trickLabel(effect.trickMultiplier) .. " Multiplier"
+		currentText = Format.number(currentAmount)
+		nextText = Format.number(nextAmount)
+	elseif effect.trick then
 		label = Format.trickLabel(effect.trick)
 		currentText = Format.percent(currentAmount)
 		nextText = Format.percent(nextAmount)

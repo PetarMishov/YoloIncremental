@@ -22,6 +22,14 @@
         "$className": "StarterPlayerScripts",
         "$path": "src/client"
       }
+    },
+
+    "StarterPack": {
+      "$className": "StarterPack",
+      "YoyoTool": {
+        "$className": "Tool",
+        "$path": "src/starterpack/YoyoTool"
+      }
     }
   }
 }

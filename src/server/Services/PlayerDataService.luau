@@ -222,6 +222,16 @@ function PlayerDataService.addMoney(player, amount)
 	return true, clone(data)
 end
 
+function PlayerDataService.getData(player)
+	local data = playerDataByUserId[player.UserId]
+
+	if not data then
+		return nil
+	end
+
+	return clone(data)
+end
+
 function PlayerDataService.start()
 	remotes = Remotes.create()
 

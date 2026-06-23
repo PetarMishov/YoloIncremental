@@ -2,13 +2,14 @@ local DefaultPlayerData = {}
 
 local clone = require(script.Parent:WaitForChild("Utils"):WaitForChild("Clone"))
 
-DefaultPlayerData.VERSION = 2
+DefaultPlayerData.VERSION = 3
 local MAX_MONEY = 9007199254740991
 
 local BASE_COMBAT_STATS = {
 	hitSpeed = 1,
 	successRate = 0.6,
 	critChance = 0.05,
+	critMultiplier = 2,
 	damage = 10,
 }
 
@@ -18,6 +19,14 @@ local BASE_TRICKS = {
 	aroundTheWorld = 0,
 	rockTheBaby = 0,
 	boomerang = 0,
+}
+
+local BASE_TRICK_MULTIPLIERS = {
+	loop = 1.25,
+	walkTheDog = 1.5,
+	aroundTheWorld = 1.75,
+	rockTheBaby = 2,
+	boomerang = 2.5,
 }
 
 local function sanitizeMoney(value)
@@ -31,6 +40,7 @@ end
 function DefaultPlayerData.createCombatStats()
 	local stats = clone(BASE_COMBAT_STATS)
 	stats.tricks = clone(BASE_TRICKS)
+	stats.trickMultipliers = clone(BASE_TRICK_MULTIPLIERS)
 
 	return stats
 end

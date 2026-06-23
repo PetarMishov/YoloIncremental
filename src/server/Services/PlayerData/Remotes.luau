@@ -1,28 +1,18 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local InstanceUtils = require(ReplicatedStorage.Shared:WaitForChild("Utils"):WaitForChild("Instance"))
+
 local Remotes = {}
 
-local function getOrCreate(parent, className, name)
-	local instance = parent:FindFirstChild(name)
-
-	if not instance then
-		instance = Instance.new(className)
-		instance.Name = name
-		instance.Parent = parent
-	end
-
-	return instance
-end
-
 function Remotes.create()
-	local remotesFolder = getOrCreate(ReplicatedStorage, "Folder", "Remotes")
-	local skillTreeFolder = getOrCreate(remotesFolder, "Folder", "SkillTree")
+	local remotesFolder = InstanceUtils.getOrCreate(ReplicatedStorage, "Folder", "Remotes")
+	local skillTreeFolder = InstanceUtils.getOrCreate(remotesFolder, "Folder", "SkillTree")
 
 	return {
-		dataUpdated = getOrCreate(skillTreeFolder, "RemoteEvent", "DataUpdated"),
-		buyUpgrade = getOrCreate(skillTreeFolder, "RemoteFunction", "BuyUpgrade"),
-		getData = getOrCreate(skillTreeFolder, "RemoteFunction", "GetData"),
-		getLeaderboard = getOrCreate(skillTreeFolder, "RemoteFunction", "GetLeaderboard"),
+		dataUpdated = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteEvent", "DataUpdated"),
+		buyUpgrade = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteFunction", "BuyUpgrade"),
+		getData = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteFunction", "GetData"),
+		getLeaderboard = InstanceUtils.getOrCreate(skillTreeFolder, "RemoteFunction", "GetLeaderboard"),
 	}
 end
 
