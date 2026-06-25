@@ -6,7 +6,8 @@ local nextActivationTime = 0
 local requestInFlight = false
 local handleAsset = ReplicatedStorage
 	:WaitForChild("Assets")
-	:WaitForChild("Part") :: Part
+	:WaitForChild("yoyo")
+	:WaitForChild("Sphere") :: Part
 
 local handle = handleAsset:Clone()
 handle.Name = "Handle"
@@ -23,6 +24,7 @@ local getData = skillTreeRemotes:WaitForChild("GetData") :: RemoteFunction
 local dataUpdated = skillTreeRemotes:WaitForChild("DataUpdated") :: RemoteEvent
 
 local YoyoMath = require(ReplicatedStorage.Shared:WaitForChild("Utils"):WaitForChild("YoyoMath"))
+local TrickAnimations = require(tool:WaitForChild("TrickAnimations"))
 
 local function getHitSpeed()
 	if currentData and currentData.player and currentData.player.stats then
@@ -94,15 +96,23 @@ tool.Activated:Connect(function()
 		currentData = result.data
 	end
 
-	if result and not result.success then
-		if type(result.cooldown) == "number" and result.cooldown > 0 then
+	if not result or result.success ~= true then
+		if result and type(result.cooldown) == "number" and result.cooldown > 0 then
 			setToolCooldown(result.cooldown)
 		else
 			nextActivationTime = 0
 			tool.Enabled = true
 		end
+
+		return
 	end
 
-	-- TODO: Play animations and shit
-	print(result)
+	if result.hitSuccess ~= true then
+		return
+	end
+
+	local character = tool.Parent
+	if character and character:IsA("Model") then
+		TrickAnimations.playRegular(character, handle)
+	end
 end)

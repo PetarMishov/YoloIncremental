@@ -103,6 +103,7 @@ function YoyoService.start(dependencies)
 
 		return {
 			success = true,
+			hitSuccess = successful,
 			score = score,
 			trick = trick,
 			trickMultiplier = trickMultiplier,
