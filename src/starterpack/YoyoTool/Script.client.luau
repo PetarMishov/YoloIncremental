@@ -6,11 +6,10 @@ local nextActivationTime = 0
 local requestInFlight = false
 local handleAsset = ReplicatedStorage
 	:WaitForChild("Assets")
-	:WaitForChild("yoyo")
-	:WaitForChild("Sphere") :: Part
+	:WaitForChild("yoyo") :: Model
+local ToolHandle = require(ReplicatedStorage.Shared:WaitForChild("Utils"):WaitForChild("ToolHandle"))
 
-local handle = handleAsset:Clone()
-handle.Name = "Handle"
+local handle = ToolHandle.createFromModel(handleAsset:Clone())
 handle.Parent = tool
 
 local yoyoHit = ReplicatedStorage

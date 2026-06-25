@@ -146,7 +146,7 @@ local function getPlayerName(userId)
 end
 
 local function getLifetimeLeaderboard()
-	local byUserId = {}
+	local entries = {}
 
 	local success, pages = pcall(function()
 		return lifetimeLeaderboard:GetSortedAsync(false, 10)
@@ -157,49 +157,19 @@ local function getLifetimeLeaderboard()
 			local userId = tonumber(entry.key)
 
 			if userId then
-				byUserId[userId] = {
+				table.insert(entries, {
 					userId = userId,
 					name = getPlayerName(userId),
 					totalMoneyEarned = Money.sanitize(entry.value),
-				}
+				})
 			end
 		end
 	else
 		warn("[PlayerDataService] Failed to load lifetime money leaderboard: " .. tostring(pages))
 	end
 
-	for _, player in ipairs(Players:GetPlayers()) do
-		local data = playerDataByUserId[player.UserId]
-
-		if data then
-			local totalMoneyEarned = Money.sanitize(data.totalMoneyEarned)
-			local existing = byUserId[player.UserId]
-
-			if not existing or totalMoneyEarned > existing.totalMoneyEarned then
-				byUserId[player.UserId] = {
-					userId = player.UserId,
-					name = player.Name,
-					totalMoneyEarned = totalMoneyEarned,
-				}
-			end
-		end
-	end
-
-	local entries = {}
-	for _, entry in pairs(byUserId) do
-		table.insert(entries, entry)
-	end
-
-	table.sort(entries, function(left, right)
-		return left.totalMoneyEarned > right.totalMoneyEarned
-	end)
-
 	local leaderboard = {}
 	for rank, entry in ipairs(entries) do
-		if rank > 10 then
-			break
-		end
-
 		entry.rank = rank
 		table.insert(leaderboard, entry)
 	end

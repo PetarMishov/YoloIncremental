@@ -20,8 +20,9 @@ local function detachHandleJoints(character: Model, handle: BasePart)
 	for _, descendant in character:GetDescendants() do
 		if descendant:IsA("JointInstance") or descendant:IsA("WeldConstraint") then
 			local joint = descendant :: any
+			local otherPart = if joint.Part0 == handle then joint.Part1 else joint.Part0
 
-			if joint.Part0 == handle or joint.Part1 == handle then
+			if (joint.Part0 == handle or joint.Part1 == handle) and otherPart and not otherPart:IsDescendantOf(handle) then
 				table.insert(detachedJoints, {
 					joint = joint,
 					part0 = joint.Part0,
