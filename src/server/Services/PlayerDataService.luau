@@ -13,8 +13,8 @@ local UpgradeEffects = require(script.Parent.PlayerData.UpgradeEffects)
 
 local PlayerDataService = {}
 
-local DATASTORE_NAME = "YoyoIncrementalPlayerData_v1"
-local LIFETIME_LEADERBOARD_NAME = "YoyoIncrementalLifetimeMoney_v1"
+local DATASTORE_NAME = "YoyoIncrementalPlayerData_v2"
+local LIFETIME_LEADERBOARD_NAME = "YoyoIncrementalLifetimeMoney_v2"
 local AUTOSAVE_INTERVAL = 60
 
 local dataStore = DataStoreService:GetDataStore(DATASTORE_NAME)
@@ -146,7 +146,7 @@ local function getPlayerName(userId)
 end
 
 local function getLifetimeLeaderboard()
-	local entries = {}
+	local entriesByUserId = {}
 
 	local success, pages = pcall(function()
 		return lifetimeLeaderboard:GetSortedAsync(false, 10)
@@ -157,19 +157,45 @@ local function getLifetimeLeaderboard()
 			local userId = tonumber(entry.key)
 
 			if userId then
-				table.insert(entries, {
+				entriesByUserId[userId] = {
 					userId = userId,
 					name = getPlayerName(userId),
 					totalMoneyEarned = Money.sanitize(entry.value),
-				})
+				}
 			end
 		end
 	else
 		warn("[PlayerDataService] Failed to load lifetime money leaderboard: " .. tostring(pages))
 	end
 
+	for userId, data in pairs(playerDataByUserId) do
+		local totalMoneyEarned = Money.sanitize(data.totalMoneyEarned)
+		local existingEntry = entriesByUserId[userId]
+
+		if not existingEntry or totalMoneyEarned > existingEntry.totalMoneyEarned then
+			entriesByUserId[userId] = {
+				userId = userId,
+				name = getPlayerName(userId),
+				totalMoneyEarned = totalMoneyEarned,
+			}
+		end
+	end
+
+	local entries = {}
+	for _, entry in pairs(entriesByUserId) do
+		table.insert(entries, entry)
+	end
+
+	table.sort(entries, function(left, right)
+		return left.totalMoneyEarned > right.totalMoneyEarned
+	end)
+
 	local leaderboard = {}
 	for rank, entry in ipairs(entries) do
+		if rank > 10 then
+			break
+		end
+
 		entry.rank = rank
 		table.insert(leaderboard, entry)
 	end

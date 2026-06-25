@@ -11,6 +11,7 @@ local YoyoService = {}
 local remotes
 local playerDataService
 local nextHitTimeByUserId = {}
+local nextCrewHitTimeByUserId = {}
 
 local function getTrick(trickThresholds)
 	if type(trickThresholds) ~= "table" then
@@ -40,6 +41,55 @@ local function getTrick(trickThresholds)
 	return nil
 end
 
+local function getCharacterHitScore(character)
+	local stats = character.stats or {}
+	local successful = math.random() <= YoyoMath.clampChance(stats.successRate)
+
+	if not successful then
+		return 0
+	end
+
+	local trick = getTrick(stats.tricks)
+	local critical = math.random() <= YoyoMath.clampChance(stats.critChance)
+	local trickMultiplier = if trick then YoyoMath.getTrickMultiplier(stats, trick) else nil
+	local critMultiplier = if critical then YoyoMath.getMultiplier(stats.critMultiplier) else nil
+
+	return HitCalculator.getCharacterScore(character, trickMultiplier, critMultiplier)
+end
+
+local function updateCrewPassiveIncome(player)
+	local data = playerDataService.getData(player)
+	local crew = if type(data) == "table" then data.crew else nil
+
+	if type(crew) ~= "table" or type(crew.members) ~= "table" then
+		return
+	end
+
+	local now = os.clock()
+	local nextCrewHitTimeByMemberId = nextCrewHitTimeByUserId[player.UserId]
+
+	if not nextCrewHitTimeByMemberId then
+		nextCrewHitTimeByMemberId = {}
+		nextCrewHitTimeByUserId[player.UserId] = nextCrewHitTimeByMemberId
+	end
+
+	for _, member in ipairs(crew.members) do
+		if type(member) == "table" and type(member.id) == "string" then
+			local stats = member.stats or {}
+			local nextHitTime = nextCrewHitTimeByMemberId[member.id] or 0
+
+			if now >= nextHitTime then
+				nextCrewHitTimeByMemberId[member.id] = now + YoyoMath.getHitCooldown(stats.hitSpeed)
+
+				local score = getCharacterHitScore(member)
+				if score > 0 then
+					playerDataService.addMoney(player, score)
+				end
+			end
+		end
+	end
+end
+
 function YoyoService.start(dependencies)
 	playerDataService = dependencies.playerDataService or dependencies.PlayerDataService
 	assert(playerDataService, "YoyoService requires PlayerDataService")
@@ -50,6 +100,7 @@ function YoyoService.start(dependencies)
 
 	Players.PlayerRemoving:Connect(function(player)
 		nextHitTimeByUserId[player.UserId] = nil
+		nextCrewHitTimeByUserId[player.UserId] = nil
 	end)
 
 	remotes.YoyoHit.OnServerInvoke = function(player)
@@ -113,6 +164,15 @@ function YoyoService.start(dependencies)
 		}
 	end
 
+	task.spawn(function()
+		while true do
+			for _, player in ipairs(Players:GetPlayers()) do
+				updateCrewPassiveIncome(player)
+			end
+
+			task.wait(0.1)
+		end
+	end)
 end
 
 return YoyoService
